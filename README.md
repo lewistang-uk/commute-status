@@ -8,7 +8,7 @@ The TfL app only shows confirmed delays and disruption, which can sometimes be l
 
 Powered by TfL Open Data.
 
---
+---
 
 ## Instructions
 
@@ -25,9 +25,9 @@ pip install -r requirements.txt
 streamlit run streamlit/app.py
 ```
 
-Alternatively, follow this link: 
+Alternatively, follow this link: https://twwlkzgnhepagkezvnhshj.streamlit.app/
 
--- 
+---
 
 ## Data Source
 
@@ -37,7 +37,7 @@ The API can return data older than the data from the previous request. For train
 
 ![Data Source](images/tts-wt_plot.png)
 
---
+---
 
 ## Findings
 
@@ -47,7 +47,7 @@ The API can return data older than the data from the previous request. For train
 
 - Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time between trains is longer than expected (327 seconds by Tukey's Outlier Criterion).
 
---
+---
 
 ## Future Improvements
 
