@@ -85,14 +85,6 @@ else:
     predicted_status = "No Trains"
 
 # streamlit app
-st.markdown("""
-<style>
-.stApp {
-    background-color: #d0f2d9;
-}
-</style>
-""", unsafe_allow_html=True)
-
 st.title("Southfields Underground Station")
 
 with st.container(border=True):
