@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
+if API_KEY is None:
+    API_KEY = st.secrets["API_KEY"]
 
 @st.cache_data(ttl=60)
 def get_line_status(line_id):

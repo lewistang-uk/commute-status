@@ -4,3 +4,6 @@
 env/
 venv/
 ENV/
+
+# streamlit secrets
+secrets.toml
