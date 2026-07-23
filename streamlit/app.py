@@ -94,7 +94,7 @@ with st.container(border=True):
     st.metric("Destination", destination, delta="Direct" if direct else None, delta_color="normal")
 
 with st.container(border=True):
-    st.metric("Avg Wait Time", "<" + str(avg_wait) + " minutes")
+    st.metric("Avg. Wait Time", "approx. " + str(avg_wait) + " minutes")
 
 st.markdown(f"TFL status: District Line - {status}")
 st.markdown(f"Predicted status: District Line - {predicted_status}")
