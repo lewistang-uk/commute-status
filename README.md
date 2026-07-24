@@ -31,11 +31,13 @@ Alternatively, follow this link: https://twwlkzgnhepagkezvnhshj.streamlit.app/
 
 ## Data Source
 
-TfL's API was used to get live train data and to create a dataset for analysis. Roughly one hour of train arrival information at stations on the Wimbledon branch of the District Line was collected (API request every 20-30 seconds).
+TfL's API was used to get live train data and to create a dataset for analysis. Roughly one hour of train arrival information at selected stations on the Wimbledon branch of the District Line was collected (API request every 20-30 seconds). No data was available for Wimbledon or West Brompton.
 
-The API can return data older than the data from the previous request. For train arrival information, this can be detected by calculating the difference between implied time to station (Arrival Time - Query Time) and TfL's time to station. Cluster analysis confirmed this distribution (K-Means, silhouette score 0.934).
+The API can return data older than the data from the previous request. For train arrival information, this can be detected by calculating the difference between the calculated time to station (Arrival Time - Query Time) and TfL's time to station. Cluster analysis confirmed this signal (K-Means, silhouette score 0.934).
 
-![Data Source](images/tts-wt_plot.png)
+| TfL - Calculated Time To Station | Example from the Data |
+|----------------------------------|----------------------------------|
+| ![](images/tts-wt_plot.png) | ![](images/stale_api.png) |
 
 ---
 
@@ -59,7 +61,9 @@ The dashboard is designed to be run with no historical data, since constant data
 
 - Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time between trains is longer than expected (327 seconds by Tukey's Outlier Criterion).
 
-![Findings](images/monte_carlo.png)
+| Monte Carlo Simulation |
+|------------------------|
+| ![Findings](images/monte_carlo.png) |
 
 ---
 
