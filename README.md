@@ -59,6 +59,8 @@ The dashboard is designed to be run with no historical data, since constant data
 
 - Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time between trains is longer than expected (327 seconds by Tukey's Outlier Criterion).
 
+![Findings](images/monte_carlo.png)
+
 ---
 
 ## Future Improvements
