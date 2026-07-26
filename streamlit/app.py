@@ -43,7 +43,7 @@ for train in find_arrivals("district", "940GZZLUSFS", direction="outbound"):
         break
 
 direct = False
-if destination not in ["Edgware Road", "District Line", "Out of Service", "High Street Kensington"]:
+if destination not in ["Out of Service", "District Line", "East Putney", "Putney Bridge", "Parsons Green", "Fulham Broadway", "West Brompton", "Earls Court", "High Street Kensington", "Edgware Road"]:
     direct = True
 
 # for upper bound on average waiting time - can be estimated by halving the train headway at Fulham Broadway (like past departures)
@@ -64,9 +64,9 @@ else:
         1
     ) # /60 for minutes, /2 for average wait time, total /120
 
-# find any suspected delays at Southfields, using following stations as a predictor
+# find any suspected delays at Southfields, using preceeding and following stations as a predictor
 waits = []
-for stop in ["940GZZLUEPY", "940GZZLUPYB"]: # only two queries for better usability
+for stop in ["940GZZLUWIP","940GZZLUEPY", "940GZZLUPYB"]: # only three queries for better usability
     for train in find_arrivals("district", stop, direction="outbound"): 
         dt = datetime.strptime(train["expectedArrival"], r"%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
