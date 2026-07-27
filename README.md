@@ -60,7 +60,7 @@ The dashboard is designed to be run with no historical data, since constant data
 
 - The halved headway of trains along the line (135.1 seconds) gave a satisfactory estimate of average wait times at Southfields when compared to the collected data through a Monte Carlo simulation (131.1 seconds, 50k iterations). Analysis through probability theory gave a different result for the average wait time at Southfields (101.9 seconds) due to delays.
 
-- Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time between trains is longer than expected (327 seconds by Tukey's Outlier Criterion).
+- Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time before the next train is significantly longer than expected (327 seconds, Tukey's Outlier Criterion).
 
 | Monte Carlo Simulation |
 |------------------------|
