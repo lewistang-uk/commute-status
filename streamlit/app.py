@@ -67,17 +67,19 @@ else:
 # find any suspected delays at Southfields, using preceeding and following stations as a predictor
 waits = []
 for stop in ["940GZZLUWIP","940GZZLUEPY", "940GZZLUPYB"]: # only three queries for better usability
+    waits_at_stop = []
     for train in find_arrivals("district", stop, direction="outbound"): 
         dt = datetime.strptime(train["expectedArrival"], r"%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
         now = datetime.now(timezone.utc)
         difference_seconds = int((dt-now).total_seconds())
-        waits.append(difference_seconds)
+        waits_at_stop.append(difference_seconds)
+    waits.append(min(waits_at_stop))
 
 if waits:
-    min_wait = min(waits)
-    if min_wait < -60:
+    waits = sorted(waits)
+    if waits[0] < -60:
         predicted_status = "Delays - dwell time at stations"
-    elif min_wait > 326:
+    elif waits[-1] > 326:
         predicted_status = "Delays - train frequency"
     else:
         predicted_status = "Good Service"
