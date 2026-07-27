@@ -53,8 +53,10 @@ for train in find_arrivals("district", "940GZZLUFBY", direction="outbound"):
     timetostation.append(train["timeToStation"])
 
 timetostation = sorted(timetostation)
+if not timetostation:
+    pass
 # if only one train on the departure board, this is the MLE of exp. waiting time
-if len(timetostation)==1:
+elif len(timetostation)==1:
     avg_wait = timetostation[0]
     
     # otherwise find the average difference, assuming uniform distribution of passenger arrival to station
@@ -80,7 +82,7 @@ if waits:
     waits = sorted(waits)
     if waits[0] < -60:
         predicted_status = "Delays - dwell time at stations"
-    elif waits[-1] > 326:
+    elif waits[-1] > 326 or len(waits)==1: # if only one station has train information, there is a big gap in service
         predicted_status = "Delays - train frequency"
     else:
         predicted_status = "Good Service"
