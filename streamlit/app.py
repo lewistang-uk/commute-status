@@ -73,7 +73,8 @@ for stop in ["940GZZLUWIP","940GZZLUEPY", "940GZZLUPYB"]: # only three queries f
         now = datetime.now(timezone.utc)
         difference_seconds = int((dt-now).total_seconds())
         waits_at_stop.append(difference_seconds)
-    waits.append(min(waits_at_stop))
+    if waits_at_stop:
+        waits.append(min(waits_at_stop))
 
 if waits:
     waits = sorted(waits)
@@ -85,6 +86,8 @@ if waits:
         predicted_status = "Good Service"
 else:
     predicted_status = "No Trains"
+
+print(waits)
 
 # streamlit app
 st.title("Southfields Underground Station")
