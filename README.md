@@ -15,6 +15,7 @@ Powered by TfL Open Data.
 1. Clone this repository and install dependencies.
 ```bash
 git clone https://github.com/lewistang-uk/commute-status.git
+cd commute-status
 pip install -r requirements.txt
 ```
 
