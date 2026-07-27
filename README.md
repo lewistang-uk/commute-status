@@ -52,6 +52,16 @@ The dashboard is designed to be run with no historical data, since constant data
 
 ---
 
+## Delay Detection
+
+Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time before the next train at a station is significantly longer than expected (327 seconds, Tukey's Outlier Criterion).
+
+| Example of Indicated Delay |
+|------------------------|
+| ![Delay](images/delay.png) |
+
+---
+
 ## Findings
 
 - A large majority of eastbound trains have destination Edgware Road, which requires a change at Earl's Court to get to campus. This leads to a useful feature: if a train is direct to South Kensington (destination Upminster, Tower Hill, Barking etc.), the dashboard indicates that the next train is direct.
@@ -59,8 +69,6 @@ The dashboard is designed to be run with no historical data, since constant data
 - TfL's time to station is always positive, but the effects of the API described above make this unreliable for waiting time. Instead, implied time to station should be used for a next train indicator, with negative values indicating that the train is already at the platform.
 
 - The halved headway of trains along the line (135.1 seconds) gave a satisfactory estimate of average wait times at Southfields when compared to the collected data through a Monte Carlo simulation (131.1 seconds, 50k iterations). Analysis through probability theory gave a different result for the average wait time at Southfields (101.9 seconds) due to delays.
-
-- Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time before the next train is significantly longer than expected (327 seconds, Tukey's Outlier Criterion).
 
 | Monte Carlo Simulation |
 |------------------------|
@@ -70,6 +78,7 @@ The dashboard is designed to be run with no historical data, since constant data
 
 ## Future Improvements
 
-- Westbound train data could be analysed and implemented in the dashboard.
+- Average wait time may not be accurate during periods of disruption because of the current headway estimation implementation. This should be addressed in future updates.
+- Westbound train data could be analysed and implemented in the dashboard, improving delay detection.
 - Further contextual information could be gathered to provide more informative delay reasons (eg. weather, sporting fixtures at Wimbledon/Craven Cottage/Stamford Bridge).
 - Data could be gathered over a longer period of time and analysed to verify that findings hold over different periods of time.
