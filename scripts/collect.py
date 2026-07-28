@@ -3,6 +3,7 @@
 
 import sqlite3
 import requests
+from datetime import datetime, timezone
 
 def find_arrivals(line, stopPointId):
     """find arrivals at a given station"""
@@ -51,6 +52,9 @@ with sqlite3.connect("tfl_train_data.db") as conn:
             arrivals = find_arrivals("district", get_station_code(station))
         except requests.RequestException:
             print("Couldn't fetch")
+            continue
+        if not arrivals:
+            cursor.execute(trainquery, (station, datetime.now(timezone.utc), None, None, None, None, None))
             continue
         for train in arrivals:
             values = (station, train.get("timestamp"), train.get("expectedArrival"), train.get("timeToStation"), train.get("direction"), train.get("towards"), train.get("currentLocation"))
