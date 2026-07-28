@@ -20,7 +20,7 @@ with sqlite3.connect("tfl_train_data.db") as conn:
     CREATE TABLE IF NOT EXISTS arrivals (
         id INTEGER PRIMARY KEY,
         station TEXT,
-        current_time TEXT,
+        query_time TEXT,
         arrival_time TEXT,
         time_to_station INTEGER,
         direction TEXT,
@@ -32,7 +32,7 @@ with sqlite3.connect("tfl_train_data.db") as conn:
     trainquery = """
     INSERT INTO arrivals (
         station, 
-        current_time, 
+        query_time, 
         arrival_time, 
         time_to_station,
         direction,
@@ -53,7 +53,7 @@ with sqlite3.connect("tfl_train_data.db") as conn:
             print("Couldn't fetch")
             continue
         for train in arrivals:
-            values = (station, train["timestamp"], train["expectedArrival"], train["timeToStation"], train["direction"], train["towards"], train["currentLocation"])
+            values = (station, train.get("timestamp"), train.get("expectedArrival"), train.get("timeToStation"), train.get("direction"), train.get("towards"), train.get("currentLocation"))
             cursor.execute(trainquery, values)
 
     conn.commit()
