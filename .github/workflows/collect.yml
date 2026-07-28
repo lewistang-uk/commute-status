@@ -1,5 +1,5 @@
 name: Collect TfL Data
-
+run-name: Data Collection
 on:
   schedule:
     # 07:00–09:55 BST (06:00–08:55 UTC)
