@@ -20,8 +20,10 @@ with sqlite3.connect("tfl_train_data.db") as conn:
     create = """ 
     CREATE TABLE IF NOT EXISTS arrivals (
         id INTEGER PRIMARY KEY,
+        train_no TEXT,
         station TEXT,
-        query_time TEXT,
+        tfl_query_time TEXT,
+        device_query_time TEXT,
         arrival_time TEXT,
         time_to_station INTEGER,
         direction TEXT,
@@ -32,15 +34,17 @@ with sqlite3.connect("tfl_train_data.db") as conn:
 
     trainquery = """
     INSERT INTO arrivals (
-        station, 
-        query_time, 
+        train_no,
+        station,
+        tfl_query_time, 
+        device_query_time,
         arrival_time, 
         time_to_station,
         direction,
         destination,
         location
     ) 
-    VALUES (?, ?, ?, ?, ?, ?, ?);
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
     """
 
     # create table if it doesn't exist
@@ -50,14 +54,15 @@ with sqlite3.connect("tfl_train_data.db") as conn:
     for station in ["WIP", "SFS", "EPY", "PYB", "PSG", "FBY"]:
         try:
             arrivals = find_arrivals("district", get_station_code(station))
+            t = datetime.now(timezone.utc) # keep time consistent for same query
         except requests.RequestException:
             print("Couldn't fetch")
             continue
         if not arrivals:
-            cursor.execute(trainquery, (station, datetime.now(timezone.utc), None, None, None, None, None))
+            cursor.execute(trainquery, (None, station, None, t, None, None, None, None, None))
             continue
         for train in arrivals:
-            values = (station, train.get("timestamp"), train.get("expectedArrival"), train.get("timeToStation"), train.get("direction"), train.get("towards"), train.get("currentLocation"))
+            values = (train.get("vehicleId"), station, train.get("timestamp"), t, train.get("expectedArrival"), train.get("timeToStation"), train.get("direction"), train.get("towards"), train.get("currentLocation"))
             cursor.execute(trainquery, values)
 
     conn.commit()
