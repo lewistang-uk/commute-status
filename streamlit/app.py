@@ -46,7 +46,7 @@ direct = False
 if destination not in ["Out of Service", "District Line", "East Putney", "Putney Bridge", "Parsons Green", "Fulham Broadway", "West Brompton", "Earls Court", "High Street Kensington", "Edgware Road"]:
     direct = True
 
-# for upper bound on average waiting time - can be estimated by halving the train headway at Fulham Broadway (like past departures)
+# for average waiting time estimate
 timetostation = []
 avg_wait = "N/A"
 for train in find_arrivals("district", "940GZZLUFBY", direction="outbound"):
@@ -55,14 +55,16 @@ for train in find_arrivals("district", "940GZZLUFBY", direction="outbound"):
 timetostation = sorted(timetostation)
 if not timetostation:
     pass
+
 # if only one train on the departure board, this is the MLE of exp. waiting time
 elif len(timetostation)==1:
     avg_wait = timetostation[0]
     
-    # otherwise find the average difference, assuming uniform distribution of passenger arrival to station
+# otherwise find the average difference, assuming uniform distribution of passenger arrival to station
 else:
+    headways = [timetostation[i] - timetostation[i-1] for i in range(1, len(timetostation))]
     avg_wait = round(
-        (timetostation[-1] - timetostation[0]) / (120*(len(timetostation)-1)),
+        sum([h**2 for h in headways]) / (120*sum(headways)),
         1
     ) # /60 for minutes, /2 for average wait time, total /120
 
@@ -101,7 +103,7 @@ with st.container(border=True):
     st.metric("Destination", destination, delta="Direct" if direct else None, delta_color="normal")
 
 with st.container(border=True):
-    st.metric("Avg. Wait Time", "approx. " + str(avg_wait) + " minutes")
+    st.metric("Avg. Wait Time", "Est. " + str(avg_wait) + " minutes")
 
 st.markdown(f"TFL status: District Line - {status}")
 st.markdown(f"Predicted status: District Line - {predicted_status}")
