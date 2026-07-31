@@ -6,8 +6,8 @@ import requests
 from datetime import datetime, timezone
 
 def find_arrivals(line, stopPointId):
-    """find arrivals at a given station"""
-    url=f"https://api.tfl.gov.uk/Line/{line}/Arrivals/{stopPointId}"
+    """find eastbound arrivals at a given station (District Line, Wimbledon branch)"""
+    url=f"https://api.tfl.gov.uk/Line/{line}/Arrivals/{stopPointId}?direction=outbound"
     r = requests.get(url, timeout=10)
     r.raise_for_status()
     return r.json()
@@ -51,7 +51,7 @@ with sqlite3.connect("tfl_train_data.db") as conn:
     cursor.execute(create)
 
     # insert values
-    for station in ["WIP", "SFS", "EPY", "PYB", "PSG", "FBY"]:
+    for station in ["SFS", "FBY"]:
         try:
             arrivals = find_arrivals("district", get_station_code(station))
             t = datetime.now(timezone.utc) # keep time consistent for same query
