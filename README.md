@@ -40,7 +40,9 @@ Initially, roughly one hour of train arrival information at selected stations on
 
 This was later expanded into an SQLite database (data/tfl_train_data.db) by regularly polling data from the API during the morning peak. A variety of arrival information was collected, but only eastbound departures from Fulham Broadway are being regularly polled.
 
-The API can return data older than the data from the previous request. For train arrival information, this can be detected by calculating the difference between the calculated time to station (Arrival Time - Query Time) and TfL's time to station. Cluster analysis confirmed this signal (K-Means, silhouette score 0.934).
+The API returns the destination Edgware Road for all eastbound trains from Southfields, even though some trains have alternative destinations. We cannot determine if a train is direct or not based on a query at Southfields.
+
+Also, the API can return data older than the data from the previous request. For train arrival information, this can be detected by calculating the difference between the calculated time to station (Arrival Time - Query Time) and TfL's time to station. Cluster analysis confirmed this signal (K-Means, silhouette score 0.934).
 
 | TfL - Calculated Time To Station | Example from the Data |
 |----------------------------------|----------------------------------|
@@ -70,8 +72,6 @@ Expected wait times can be calculated from the headways.
 
 ## Findings
 
-- A large majority of eastbound trains have destination Edgware Road, which requires a change at Earl's Court to get to campus. This leads to a useful feature: if a train is direct to South Kensington (destination Upminster, Tower Hill, Barking etc.), the dashboard indicates that the next train is direct.
-
 - TfL's time to station is always positive, but the effects of the API described above make this unreliable for waiting time. Instead, implied time to station should be used for a next train indicator, with negative values indicating that the train is already at the platform.
 
 - The halved headway of trains along the line (135.1 seconds) gave a satisfactory estimate of average wait times at Southfields when compared to the collected data through a Monte Carlo simulation (131.1 seconds, 50k iterations). Analysis through probability theory gave a different result for the average wait time at Southfields (101.9 seconds) due to delays, showing that the halved headway is only accurate assuming a constant headway.
@@ -86,3 +86,4 @@ Expected wait times can be calculated from the headways.
 
 - Westbound train data could be analysed and implemented in the dashboard, improving delay detection.
 - Further contextual information could be gathered to provide more informative delay reasons (eg. weather, sporting fixtures at Wimbledon/Craven Cottage/Stamford Bridge).
+- Analyse the proportion of direct trains
