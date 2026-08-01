@@ -3,11 +3,22 @@ import requests
 import os
 from dotenv import load_dotenv
 from datetime import datetime, timezone
+from pathlib import Path
+import sqlite3
 
+# get API key if needed
 load_dotenv()
 API_KEY = os.getenv("API_KEY")
 if API_KEY is None:
     API_KEY = st.secrets["API_KEY"]
+
+# get database location
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data"
+
+# check if weekday morning
+now = datetime.now(timezone.utc)
+is_weekday_morning = True if (now.day <= 4 and 6 <= now.hour < 10) else False
 
 @st.cache_data(ttl=60)
 def get_line_status(line_id):
@@ -28,7 +39,7 @@ def find_arrivals(ids, stopPointId, direction=""):
 status = get_line_status("district")[0]["lineStatuses"][0]["statusSeverityDescription"]
 
 # if no trains exist
-next_train = "N/A"
+next_train = "No Train Showing"
 destination = "District Line"
 
 for train in find_arrivals("district", "940GZZLUSFS", direction="outbound"):
@@ -46,67 +57,106 @@ direct = False
 if destination not in ["Out of Service", "District Line", "East Putney", "Putney Bridge", "Parsons Green", "Fulham Broadway", "West Brompton", "Earls Court", "High Street Kensington", "Edgware Road"]:
     direct = True
 
-# for average waiting time estimate
-timetostation = []
-avg_wait = "N/A"
-for train in find_arrivals("district", "940GZZLUFBY", direction="outbound"):
-    timetostation.append(train["timeToStation"])
+# for average headway and waiting time estimates
+query = """
+WITH fby AS (
+    SELECT 
+        device_query_time,
+        time_to_station,
+        LAG(1) OVER (PARTITION BY device_query_time ORDER BY time_to_station) AS prev_tts
+    FROM arrivals
+    WHERE station = "FBY"
+    AND NOT COALESCE(direction, "N/A") = "inbound"
+)
+SELECT
+    CASE 
+        WHEN COUNT(*) = 1 THEN NULL 
+        ELSE ROUND(SUM(COALESCE(time_to_station-prev_tts, 0)) / (COUNT(*)-1), 1) 
+    END AS avg_headway,
+    CASE 
+        WHEN COUNT(*) = 1 THEN "N/A" 
+        ELSE ROUND(SUM(COALESCE((time_to_station-prev_tts) * (time_to_station-prev_tts), 0)) / (2*(SUM(COALESCE(time_to_station-prev_tts, 0)))), 1)
+    END AS avg_wait_time
+FROM fby
+GROUP BY device_query_time
+ORDER BY device_query_time DESC
+LIMIT 5
+;
+"""
 
-timetostation = sorted(timetostation)
-if not timetostation:
-    pass
+if is_weekday_morning:
+    with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute(query)
+        kpis=cursor.fetchall()
+        headways, waits = map(list, zip(*kpis))
 
-# if only one train on the departure board, this is the MLE of exp. waiting time
-elif len(timetostation)==1:
-    avg_wait = timetostation[0]
-    
-# otherwise find the average difference, assuming uniform distribution of passenger arrival to station
+        avg_wait = waits[0]
+
+        if "N/A" in waits:
+            wait_delta_mins = "N/A"
+        else:
+            wait_delta_mins = str(waits[0] - sum(waits[1:])/4) # takes the last wait times from database, potentially Friday for Monday 7am queries
+
+        # make this a delta for positive time
+        if wait_delta_mins[0].isnumeric():
+            wait_delta_mins = "+" + wait_delta_mins
+
+        avg_headway = headways[0]
+        if "N/A" in headways:
+            headway_delta_mins = "N/A"
+        else:
+            headway_delta_mins = str(headways[0] - sum(headways[1:])/4)
+
+        # make this a delta for positive time
+        if headway_delta_mins[0].isnumeric():
+            headway_delta_mins = "+" + headway_delta_mins
+        
 else:
-    headways = [timetostation[i] - timetostation[i-1] for i in range(1, len(timetostation))]
-    avg_wait = round(
-        sum([h**2 for h in headways]) / (120*sum(headways)),
-        1
-    ) # /60 for minutes, /2 for average wait time, total /120
-
-# find any suspected delays at Southfields, using preceeding and following stations as a predictor
-waits = []
-for stop in ["940GZZLUWIP","940GZZLUEPY", "940GZZLUPYB"]: # only three queries for better usability
-    waits_at_stop = []
-    for train in find_arrivals("district", stop, direction="outbound"): 
-        dt = datetime.strptime(train["expectedArrival"], r"%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-        now = datetime.now(timezone.utc)
-        difference_seconds = int((dt-now).total_seconds())
-        waits_at_stop.append(difference_seconds)
-    if waits_at_stop:
-        waits.append(min(waits_at_stop))
-
-if waits:
-    waits = sorted(waits)
-    if waits[0] < -60:
-        predicted_status = "Delays - dwell time at stations"
-    elif waits[-1] > 326 or len(waits)==1: # if only one station has train information, there is a big gap in service
-        predicted_status = "Delays - train frequency"
-    else:
-        predicted_status = "Good Service"
-else:
-    predicted_status = "No Trains"
-
-print(waits)
+    avg_wait = "N/A"
+    avg_headway = "N/A"
+    wait_delta_mins = None
+    headway_delta_mins = None
 
 # streamlit app
 st.title("Southfields Underground Station")
 
-with st.container(border=True):
-    st.metric("Next Eastbound Train", str(next_train)+" minute" + ("" if next_train == 1 else "s"))
+col1, col2 = st.columns(2)
 
-with st.container(border=True):
-    st.metric("Destination", destination, delta="Direct" if direct else None, delta_color="normal")
+with col1:
+    with st.container(border=True):
+        st.metric(
+            "🚆 Next Eastbound Train",
+            f"{next_train} min{'' if next_train == 1 else 's'}",
+        )
 
-with st.container(border=True):
-    st.metric("Avg. Wait Time", "Est. " + str(avg_wait) + " minutes")
+    with st.container(border=True):
+        st.metric(
+            "📍 Destination",
+            destination,
+            delta="Direct" if direct else None,
+            delta_color="normal",
+        )
+
+with col2:
+    with st.container(border=True):
+        st.metric(
+            "📊 Avg. Headway",
+            f"Est. {avg_headway} mins",
+            delta=headway_delta_mins,
+            delta_color="inverse",
+        )
+
+    with st.container(border=True):
+        st.metric(
+            "⏱️ Avg. Wait Time",
+            f"Est. {avg_wait} mins",
+            delta=wait_delta_mins,
+            delta_color="inverse",
+        )
 
 st.markdown(f"TFL status: District Line - {status}")
-st.markdown(f"Predicted status: District Line - {predicted_status}")
+st.markdown("Headway and Wait Time estimates available 7am-11am on weekdays")
 
 with st.sidebar:
     st.text("Powered by TfL Open Data")
