@@ -4,7 +4,9 @@
 
 A dashboard showing useful information for my commute to campus. 
 
-The TfL app only shows confirmed delays and disruption, which can sometimes be late or vague. By using TfL's API as a source of train data, potential delays can be identified before official confirmation, as well as being able to check when the next train is.
+The TfL app only shows confirmed delays and disruption, which can sometimes be late. By using TfL's API as a source of train data, potential delays can be identified before official confirmation, as well as being able to check when the next train is.
+
+KPIs (headways and wait times) can also be tracked over time to identify trends in service patterns.
 
 Powered by TfL Open Data.
 
@@ -32,7 +34,11 @@ Alternatively, follow this link: https://twwlkzgnhepagkezvnhshj.streamlit.app/
 
 ## Data Source
 
-TfL's API was used to get live train data and to create a dataset for analysis. Roughly one hour of train arrival information at selected stations on the Wimbledon branch of the District Line was collected (API request every 20-30 seconds). No data was available for Wimbledon or West Brompton.
+TfL's API was used to get live train data and to create a dataset for analysis. 
+
+Initially, roughly one hour of train arrival information at selected stations on the Wimbledon branch of the District Line was collected (API request every 20-30 seconds). No data was available for Wimbledon or West Brompton due to being National Rail stations.
+
+This was later expanded into an SQLite database (data/tfl_train_data.db) by regularly polling data from the API during the morning peak. A variety of arrival information was collected, but only eastbound departures from Fulham Broadway are being regularly polled.
 
 The API can return data older than the data from the previous request. For train arrival information, this can be detected by calculating the difference between the calculated time to station (Arrival Time - Query Time) and TfL's time to station. Cluster analysis confirmed this signal (K-Means, silhouette score 0.934).
 
@@ -42,23 +48,23 @@ The API can return data older than the data from the previous request. For train
 
 ---
 
-## Limitations
+## Average Headway Estimates 
 
-The data collected only spans an hour during a weekday afternoon, so longer-term averages and trends cannot be reliably identified. Care must be taken when making assumptions involving other time periods (eg. early-morning, late-night, weekends).
+Having no eastbound train departure information from Southfields was possible due to the train origin only being a few minutes away. Headway estimates were calculated using information from Fulham Broadway (tripling the window for arrival information) and assumed to be a good estimate of the headway at Southfields.
 
-In addition, having no eastbound train departure information from Southfields was possible, due to the train origin (Wimbledon) only being a few minutes away. Headway estimates had to be calculated using information from stations down the line (East Putney, Putney Bridge, Fulham Broadway) and assumed to be a good estimate of the headway at Southfields.
-
-The dashboard is designed to be run with no historical data, since constant data collection is impractical at this stage of development.
-
----
-
-## Delay Detection
-
-Delays can be detected if the train is held at the platform for longer than scheduled (normally 20-30 seconds), or if the time before the next train at a station is significantly longer than expected (327 seconds, Tukey's Outlier Criterion).
-
-| Example of Indicated Delay |
+| Censoring in Headway Calculation |
 |------------------------|
-| ![Delay](images/delay.png) |
+| ![Findings](images/censoring.png) |
+
+Extending the window for information reduced the effect of right censoring since the last headway can be ignored while having adequate data. However, left censoring was still a problem, since previous trains do not show on the departure board. 
+
+### Solutions to Left Censoring
+| Description | Benefits | Drawbacks |
+|-------------|----------|-----------|
+| Drop the first headway (chosen)| Simple to query | Reduces number of headway observations with an already low sample size |
+| Find the first headway | More data could improve accuracy | Subject to the inspection paradox - a longer headway is more likely to be sampled |
+
+Expected wait times can be calculated from the headways.
 
 ---
 
@@ -68,7 +74,7 @@ Delays can be detected if the train is held at the platform for longer than sche
 
 - TfL's time to station is always positive, but the effects of the API described above make this unreliable for waiting time. Instead, implied time to station should be used for a next train indicator, with negative values indicating that the train is already at the platform.
 
-- The halved headway of trains along the line (135.1 seconds) gave a satisfactory estimate of average wait times at Southfields when compared to the collected data through a Monte Carlo simulation (131.1 seconds, 50k iterations). Analysis through probability theory gave a different result for the average wait time at Southfields (101.9 seconds) due to delays.
+- The halved headway of trains along the line (135.1 seconds) gave a satisfactory estimate of average wait times at Southfields when compared to the collected data through a Monte Carlo simulation (131.1 seconds, 50k iterations). Analysis through probability theory gave a different result for the average wait time at Southfields (101.9 seconds) due to delays, showing that the halved headway is only accurate assuming a constant headway.
 
 | Monte Carlo Simulation |
 |------------------------|
@@ -78,7 +84,5 @@ Delays can be detected if the train is held at the platform for longer than sche
 
 ## Future Improvements
 
-- Average wait time may not be accurate during periods of disruption because of the current headway estimation implementation. This should be addressed in future updates.
 - Westbound train data could be analysed and implemented in the dashboard, improving delay detection.
 - Further contextual information could be gathered to provide more informative delay reasons (eg. weather, sporting fixtures at Wimbledon/Craven Cottage/Stamford Bridge).
-- Data could be gathered over a longer period of time and analysed to verify that findings hold over different periods of time.
