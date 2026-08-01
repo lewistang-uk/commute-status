@@ -55,7 +55,7 @@ with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
     cursor.execute(create)
 
     # insert values
-    for station in ["SFS", "FBY"]:
+    for station in ["FBY"]:
         try:
             arrivals = find_arrivals("district", get_station_code(station))
             t = datetime.now(timezone.utc) # keep time consistent for same query
