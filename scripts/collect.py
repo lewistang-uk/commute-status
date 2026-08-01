@@ -4,6 +4,10 @@
 import sqlite3
 import requests
 from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA = ROOT / "data"
 
 def find_arrivals(line, stopPointId):
     """find eastbound arrivals at a given station (District Line, Wimbledon branch)"""
@@ -15,7 +19,7 @@ def find_arrivals(line, stopPointId):
 def get_station_code(code: str):
     return "940GZZLU" + code
 
-with sqlite3.connect("tfl_train_data.db") as conn:
+with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
     cursor = conn.cursor()
     create = """ 
     CREATE TABLE IF NOT EXISTS arrivals (
