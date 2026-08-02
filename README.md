@@ -38,7 +38,7 @@ TfL's API was used to get live train data and to create a dataset for analysis.
 
 Initially, roughly one hour of train arrival information at selected stations on the Wimbledon branch of the District Line was collected (API request every 20-30 seconds). No data was available for Wimbledon or West Brompton due to being National Rail stations.
 
-This was later expanded into an SQLite database (data/tfl_train_data.db) by regularly polling data from the API during the morning peak. A variety of arrival information was collected, but only eastbound departures from Fulham Broadway are being regularly polled.
+This was later expanded into an SQLite database (data/tfl_train_data.db) by regularly polling data from the API during the morning peak. A variety of arrival information was collected, but only eastbound departures from Fulham Broadway are being regularly polled. Google Cloud Scheduler and GitHub Actions are being used to control the frequency of polling.
 
 The API returns the destination Edgware Road for all eastbound trains from Southfields, even though some trains have alternative destinations. We cannot determine if a train is direct or not based on a query at Southfields.
 
@@ -86,4 +86,4 @@ Expected wait times can be calculated from the headways.
 
 - Westbound train data could be analysed and implemented in the dashboard, improving delay detection.
 - Further contextual information could be gathered to provide more informative delay reasons (eg. weather, sporting fixtures at Wimbledon/Craven Cottage/Stamford Bridge).
-- Analyse the proportion of direct trains
+- Analyse the proportion of direct trains.
