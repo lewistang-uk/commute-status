@@ -63,7 +63,7 @@ WITH fby AS (
     SELECT 
         device_query_time,
         time_to_station,
-        LAG(1) OVER (PARTITION BY device_query_time ORDER BY time_to_station) AS prev_tts
+        LAG(time_to_station) OVER (PARTITION BY device_query_time ORDER BY time_to_station) AS prev_tts
     FROM arrivals
     WHERE station = "FBY"
     AND NOT COALESCE(direction, "N/A") = "inbound"
@@ -91,27 +91,27 @@ if is_weekday_morning:
         kpis=cursor.fetchall()
         headways, waits = map(list, zip(*kpis))
 
-        avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
+    avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
-        if "N/A" in waits:
-            wait_delta_mins = "N/A"
-        else:
-            wait_delta_mins = str(round(waits[0]/60 - (sum(waits[1:])/240), 1)) + " mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
+    if "N/A" in waits:
+        wait_delta_mins = "N/A"
+    else:
+        wait_delta_mins = str(round(waits[0]/60 - (sum(waits[1:])/240), 1)) + " mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
 
-        # make this a delta for positive time
-        if wait_delta_mins[0].isnumeric():
-            wait_delta_mins = "+" + wait_delta_mins
+    # make this a delta for positive time
+    if wait_delta_mins[0].isnumeric():
+        wait_delta_mins = "+" + wait_delta_mins
 
-        avg_headway = round(headways[0]/60, 1) if type(headways[0])!=str else "N/A"
+    avg_headway = round(headways[0]/60, 1) if type(headways[0])!=str else "N/A"
 
-        if "N/A" in headways:
-            headway_delta_mins = "N/A"
-        else:
-            headway_delta_mins = str(round(headways[0]/60 - (sum(headways[1:])/(240)), 1)) + " mins"
+    if "N/A" in headways:
+        headway_delta_mins = "N/A"
+    else:
+        headway_delta_mins = str(round(headways[0]/60 - (sum(headways[1:])/(240)), 1)) + " mins"
 
-        # make this a delta for positive time
-        if headway_delta_mins[0].isnumeric():
-            headway_delta_mins = "+" + headway_delta_mins
+    # make this a delta for positive time
+    if headway_delta_mins[0].isnumeric():
+        headway_delta_mins = "+" + headway_delta_mins
         
 else:
     avg_wait = "N/A"
