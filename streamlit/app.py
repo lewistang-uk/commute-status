@@ -91,23 +91,23 @@ if is_weekday_morning:
         kpis=cursor.fetchall()
         headways, waits = map(list, zip(*kpis))
 
-        avg_wait = round(waits[0]/60, 1) if waits[0].isnumeric() else "N/A"
+        avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
         if "N/A" in waits:
             wait_delta_mins = "N/A"
         else:
-            wait_delta_mins = str(round(waits[0] - sum(waits[1:])/240, 1)) # takes the last wait times from database, potentially Friday for Monday 7am queries
+            wait_delta_mins = str(round(waits[0]/60 - (sum(waits[1:])/240), 1)) + " mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
 
         # make this a delta for positive time
         if wait_delta_mins[0].isnumeric():
             wait_delta_mins = "+" + wait_delta_mins
 
-        avg_headway = round(headways[0]/60, 1) if headways[0].isnumeric() else "N/A"
+        avg_headway = round(headways[0]/60, 1) if type(headways[0])!=str else "N/A"
 
         if "N/A" in headways:
             headway_delta_mins = "N/A"
         else:
-            headway_delta_mins = str(round(headways[0] - sum(headways[1:])/240, 1))
+            headway_delta_mins = str(round(headways[0]/60 - (sum(headways[1:])/(240)), 1)) + " mins"
 
         # make this a delta for positive time
         if headway_delta_mins[0].isnumeric():
