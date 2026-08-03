@@ -50,9 +50,9 @@ Also, the API can return data older than the data from the previous request. For
 
 ---
 
-## Average Headway Estimates 
+## Average Headway and Wait Time Estimates 
 
-Having no eastbound train departure information from Southfields was possible due to the train origin only being a few minutes away. Headway estimates were calculated using information from Fulham Broadway (tripling the window for arrival information) and assumed to be a good estimate of the headway at Southfields.
+In the majority of observations, the number of eastbound trains showing from Southfields is less than two, so headways could not be reliably calculated. Headway estimates were calculated using information from Fulham Broadway (tripling the window for arrival information) and assumed to be a good estimate of the headway at Southfields.
 
 | Censoring in Headway Calculation |
 |------------------------|
@@ -66,7 +66,7 @@ Extending the window for information reduced the effect of right censoring since
 | Drop the first headway (chosen)| Simple to query | Reduces number of headway observations with an already low sample size |
 | Find the first headway | More data could improve accuracy | Subject to the inspection paradox - a longer headway is more likely to be sampled |
 
-Expected wait times can be calculated from the headways.
+The expected wait time can be calculated from the headways, proportional to the sum of squared headways divided by the sum of headways. These KPIs can be tracked over time, using the arrivals database for historic headway data. A current view (compares current KPIs to the last four polls) and a 1-day view (compares the current day's KPIs to the last four days) have been implemented in the dashboard.
 
 ---
 
