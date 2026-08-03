@@ -58,7 +58,7 @@ if destination not in ["Out of Service", "District Line", "East Putney", "Putney
     direct = True
 
 # for average headway and waiting time estimates
-query = """
+now_query = """
 WITH fby AS (
     SELECT 
         device_query_time,
@@ -84,12 +84,60 @@ LIMIT 5
 ;
 """
 
+day_query = """
+WITH fby AS (
+    SELECT 
+        device_query_time,
+        time_to_station,
+        LAG(time_to_station) OVER (PARTITION BY device_query_time ORDER BY time_to_station) AS prev_tts
+    FROM arrivals
+    WHERE station = "FBY"
+    AND NOT COALESCE(direction, "N/A") = "inbound"
+),
+kpis AS (
+    SELECT
+        CASE 
+            WHEN COUNT(*) = 1 THEN NULL 
+            ELSE ROUND(SUM(COALESCE(time_to_station-prev_tts, 0)) / (COUNT(*)-1), 1) 
+        END AS avg_headway,
+        CASE 
+            WHEN COUNT(*) = 1 THEN "N/A" 
+            ELSE ROUND(SUM(COALESCE((time_to_station-prev_tts) * (time_to_station-prev_tts), 0)) / (2*(SUM(COALESCE(time_to_station-prev_tts, 0)))), 1)
+        END AS avg_wait_time,
+        device_query_time
+    FROM fby
+    GROUP BY device_query_time
+    ORDER BY device_query_time
+)
+SELECT 
+    AVG(avg_headway),
+    AVG(avg_wait_time)
+FROM kpis
+GROUP BY DATE(device_query_time)
+ORDER BY DATE(device_query_time) DESC
+LIMIT 5
+;
+"""
+query_map = {
+    "Now": now_query,
+    "Day": day_query
+}
+
+slider = st.selectbox("KPI period", ["Now", "Day"])
+query = query_map[slider]
+
 if is_weekday_morning:
-    with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute(query)
-        kpis=cursor.fetchall()
-        headways, waits = map(list, zip(*kpis))
+    # wrap inside a function to cache result
+    @st.cache_data(ttl=120)
+    def find_kpis(query):
+        with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            kpis=cursor.fetchall()
+            headways, waits = map(list, zip(*kpis))
+        return headways, waits
+
+    headways, waits = find_kpis(query)
 
     avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
