@@ -30,6 +30,7 @@ jobs:
       - name: Run data collection
         run: |
           python scripts/collect.py
+          python scripts/collect_train_numbers.py
 
       - name: Commit updated database
         run: |
