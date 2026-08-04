@@ -78,7 +78,34 @@ The expected wait time can be calculated from the headways, proportional to the 
 | Average Wait Time | The expected wait for a passenger, assuming uniform and independent distribution of passenger arrivals |
 | Excess Wait Time | The extra time the average passenger spends waiting for a train compared to regular operations |
 
-The SQL queries used to calculate these KPIs over a given time period can be found in this repository (scripts/queries.sql).
+Example query to find the last five headways and wait times: 
+```sql
+WITH fby AS (
+    SELECT 
+        device_query_time,
+        time_to_station,
+        LAG(time_to_station) OVER (PARTITION BY device_query_time ORDER BY time_to_station) AS prev_tts
+    FROM arrivals
+    WHERE station = "FBY"
+    AND NOT COALESCE(direction, "N/A") = "inbound"
+)
+SELECT
+    CASE 
+        WHEN COUNT(*) = 1 THEN NULL 
+        ELSE ROUND(SUM(COALESCE(time_to_station-prev_tts, 0)) / (COUNT(*)-1), 1) 
+    END AS avg_headway,
+    CASE 
+        WHEN COUNT(*) = 1 THEN "N/A" 
+        ELSE ROUND(SUM(COALESCE((time_to_station-prev_tts) * (time_to_station-prev_tts), 0)) / (2*(SUM(COALESCE(time_to_station-prev_tts, 0)))), 1)
+    END AS avg_wait_time
+FROM fby
+GROUP BY device_query_time
+ORDER BY device_query_time DESC
+LIMIT 5
+;
+```
+
+All queries used to find KPIs can be found in the scripts folder (queries.sql).
 
 ---
 
