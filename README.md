@@ -66,7 +66,7 @@ Extending the window for information reduced the effect of right censoring since
 | Drop the first headway (chosen)| Simple to query | Reduces number of headway observations with an already low sample size |
 | Find the first headway | More data could improve accuracy | Subject to the inspection paradox - a longer headway is more likely to be sampled |
 
-The expected wait time can be calculated from the headways, proportional to the sum of squared headways divided by the sum of headways. These KPIs can be tracked over time, using the arrivals database for historic headway data. A current view (compares current KPIs to the last four polls) and a 1-day view (compares the current day's KPIs to the last four days) have been implemented in the dashboard.
+The expected wait time can be calculated from the headways, proportional to the sum of squared headways divided by the sum of headways. 
 
 ---
 
@@ -77,6 +77,8 @@ The expected wait time can be calculated from the headways, proportional to the 
 | Average Headway | Average gap between consecutive trains |
 | Average Wait Time | The expected wait for a passenger, assuming uniform and independent distribution of passenger arrivals |
 | Excess Wait Time | The extra time the average passenger spends waiting for a train compared to regular operations |
+
+These KPIs can be tracked over time, using the arrivals database for historic headway data. A current view (compares current KPIs to the last four polls) and a 1-day view (compares the current day's KPIs to the last four days) have been implemented in the dashboard.
 
 Example query to find the last five headways and wait times: 
 ```sql
