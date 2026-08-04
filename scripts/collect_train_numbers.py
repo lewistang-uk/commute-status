@@ -35,4 +35,4 @@ with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
         for train in arrivals:
             train_no = train["vehicleId"]
             cursor.execute(insert, train_no, station, t)
-    cursor.commit()
+    conn.commit()
