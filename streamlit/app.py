@@ -118,15 +118,18 @@ ORDER BY DATE(device_query_time) DESC
 LIMIT 5
 ;
 """
-query_map = {
-    "Now": now_query,
-    "Day": day_query
-}
-
-slider = st.selectbox("KPI period", ["Now", "Day"])
-query = query_map[slider]
+st.title("Southfields Station")
 
 if is_weekday_morning:
+    # let the user select query
+    query_map = {
+        "Now": now_query,
+        "Day": day_query
+    }
+
+    selection = st.selectbox("KPI period", ["Now", "Day"])
+    query = query_map[selection]
+
     # wrap inside a function to cache result
     @st.cache_data(ttl=120)
     def find_kpis(query):
@@ -184,8 +187,7 @@ else:
     wait_delta_mins = None
     headway_delta_mins = None
 
-# streamlit app
-st.title("Southfields Station")
+# build KPI containers
 
 col1, col2 = st.columns(2)
 
