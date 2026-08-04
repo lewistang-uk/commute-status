@@ -8,7 +8,7 @@ DATA = ROOT / "data"
 
 create = """
 CREATE TABLE IF NOT EXISTS train_numbers (
-    id INT PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     train_no TEXT,
     station TEXT,
     query_time TEXT
