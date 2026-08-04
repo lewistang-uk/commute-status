@@ -6,7 +6,7 @@ A dashboard showing useful information for my commute to campus.
 
 The TfL app only shows confirmed delays and disruption, which can sometimes be late. By using TfL's API as a source of train data, potential delays can be identified before official confirmation, as well as being able to check when the next train is.
 
-KPIs (headways and wait times) can also be tracked over time to identify trends in service patterns.
+KPIs (headways, wait times and excess wait times) can also be tracked over time to identify trends in service patterns.
 
 Powered by TfL Open Data.
 
@@ -77,6 +77,8 @@ The expected wait time can be calculated from the headways, proportional to the 
 | Average Headway | Average gap between consecutive trains |
 | Average Wait Time | The expected wait for a passenger, assuming uniform and independent distribution of passenger arrivals |
 | Excess Wait Time | The extra time the average passenger spends waiting for a train compared to regular operations |
+
+The SQL queries used to calculate these KPIs over a given time period can be found in this repository (scripts/queries.sql).
 
 ---
 
