@@ -139,28 +139,45 @@ if is_weekday_morning:
 
     headways, waits = find_kpis(query)
 
+    # find average wait time in minutes
     avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
     if "N/A" in waits:
         wait_delta_mins = "N/A"
     else:
-        wait_delta_mins = str(round(waits[0]/60 - (sum(waits[1:])/240), 1)) + " mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
+        wait_delta_mins = f"{round(waits[0]/60 - (sum(waits[1:])/240), 1)} mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
 
     # make this a delta for positive time
     if wait_delta_mins[0].isnumeric():
         wait_delta_mins = "+" + wait_delta_mins
 
+    # find average headway
     avg_headway = round(headways[0]/60, 1) if type(headways[0])!=str else "N/A"
 
     if "N/A" in headways:
         headway_delta_mins = "N/A"
     else:
-        headway_delta_mins = str(round(headways[0]/60 - (sum(headways[1:])/(240)), 1)) + " mins"
+        headway_delta_mins = f"{round(headways[0]/60 - (sum(headways[1:])/(240)), 1)} mins"
 
     # make this a delta for positive time
     if headway_delta_mins[0].isnumeric():
         headway_delta_mins = "+" + headway_delta_mins
-        
+
+    # find EWT
+    if (avg_wait != "N/A") and (avg_headway != "N/A"):
+        ewt = round(max(avg_wait - avg_headway/2, 0), 1) # because EWT is a non-negative KPI
+    else:
+        ewt = "N/A"
+
+    if "N/A" in headways or "N/A" in waits:
+        ewt_delta = "N/A"
+    else:
+        ewt_delta = f"{round(ewt - (sum(waits[1:]) - 0.5*sum(headways[1:]))/240, 1)} mins"
+
+    # make this a delta for positive time
+    if ewt_delta[0].isnumeric():
+        ewt_delta = "+" + ewt_delta
+
 else:
     avg_wait = "N/A"
     avg_headway = "N/A"
@@ -168,7 +185,7 @@ else:
     headway_delta_mins = None
 
 # streamlit app
-st.title("Southfields Underground Station")
+st.title("Southfields Station")
 
 col1, col2 = st.columns(2)
 
@@ -176,9 +193,10 @@ with col1:
     with st.container(border=True):
         st.metric(
             "🚆 Next Eastbound Train",
-            f"{next_train} min{'' if next_train == 1 else 's'}",
+            f"{next_train} min{'' if next_train == 1 else 's'}" if type(next_train)==int else "No Train Showing",
         )
 
+with col2:
     with st.container(border=True):
         st.metric(
             "📍 Destination",
@@ -187,22 +205,34 @@ with col1:
             delta_color="normal",
         )
 
-with col2:
-    with st.container(border=True):
-        st.metric(
-            "📊 Avg. Headway",
-            f"Est. {avg_headway} mins",
-            delta=headway_delta_mins,
-            delta_color="inverse",
-        )
+if is_weekday_morning:
+    col3, col4, col5 = st.columns(3)
+    with col3:
+        with st.container(border=True):
+            st.metric(
+                "📏 Avg. Headway",
+                f"{avg_headway} mins",
+                delta=headway_delta_mins,
+                delta_color="inverse",
+            )
 
-    with st.container(border=True):
-        st.metric(
-            "⏱️ Avg. Wait Time",
-            f"Est. {avg_wait} mins",
-            delta=wait_delta_mins,
-            delta_color="inverse",
-        )
+    with col4:
+        with st.container(border=True):
+            st.metric(
+                "⏱️ Avg. Wait Time",
+                f"{avg_wait} mins",
+                delta=wait_delta_mins,
+                delta_color="inverse",
+            )
+
+    with col5:
+        with st.container(border=True):
+            st.metric(
+                "⌚ Excess Wait Time",
+                f"{ewt} mins",
+                delta=ewt_delta,
+                delta_color="inverse",
+            )
 
 st.markdown(f"TFL status: District Line - {status}")
 st.markdown("Headway and Wait Time estimates available 7am-11am on weekdays")
