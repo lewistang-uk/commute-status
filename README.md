@@ -70,6 +70,16 @@ The expected wait time can be calculated from the headways, proportional to the 
 
 ---
 
+## KPIs
+
+| KPI | Description |
+|-----|-------------|
+| Average Headway | Average gap between consecutive trains |
+| Average Wait Time | The expected wait for a passenger, assuming uniform and independent distribution of passenger arrivals |
+| Excess Wait Time | The extra time the average passenger spends waiting for a train compared to regular operations |
+
+---
+
 ## Findings
 
 - TfL's time to station is always positive, but the effects of the API described above make this unreliable for waiting time. Instead, implied time to station should be used for a next train indicator, with negative values indicating that the train is already at the platform.
