@@ -18,7 +18,7 @@ DATA = ROOT / "data"
 
 # check if weekday morning
 now = datetime.now(timezone.utc)
-is_weekday_morning = True if (now.day <= 4 and 6 <= now.hour < 10) else False
+is_weekday_morning = True if (now.weekday() <= 4 and 6 <= now.hour < 10) else False
 
 @st.cache_data(ttl=60)
 def get_line_status(line_id):
