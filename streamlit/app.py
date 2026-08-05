@@ -41,6 +41,7 @@ status = get_line_status("district")[0]["lineStatuses"][0]["statusSeverityDescri
 # if no trains exist
 next_train = "No Train Showing"
 destination = "District Line"
+train_no = "000" # out of service
 
 for train in find_arrivals("district", "940GZZLUSFS", direction="outbound"):
     dt = datetime.strptime(train["expectedArrival"], r"%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
@@ -51,10 +52,22 @@ for train in find_arrivals("district", "940GZZLUSFS", direction="outbound"):
     else:
         next_train = difference_seconds//60
         destination = train["towards"]
+        train_no = train["vehicleId"]
         break
 
+# check if a train is direct
 direct = False
-if destination not in ["Out of Service", "District Line", "East Putney", "Putney Bridge", "Parsons Green", "Fulham Broadway", "West Brompton", "Earls Court", "High Street Kensington", "Edgware Road"]:
+@st.cache_data(ttl=300)
+def find_indirect_trains():
+    with sqlite3.connect(DATA / "tfl_train_data.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT train_no FROM train_numbers WHERE station='HSK'")
+        indirect_trains = [row[0] for row in cursor.fetchall()]
+        indirect_trains.append("000")
+        return indirect_trains
+    
+indirect_trains = find_indirect_trains()
+if train_no not in indirect_trains and destination != "Earls Court": # some late night trains terminate at ECT
     direct = True
 
 # for average headway and waiting time estimates
@@ -148,7 +161,7 @@ if is_weekday_morning:
     avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
     if "N/A" in waits:
-        wait_delta_mins = "N/A"
+        wait_delta_mins = "Delay likely"
     else:
         wait_delta_mins = f"{round(waits[0]/60 - (sum(waits[1:])/240), 1)} mins" # takes the last wait times from database, potentially Friday for Monday 7am queries
 
@@ -160,7 +173,7 @@ if is_weekday_morning:
     avg_headway = round(headways[0]/60, 1) if type(headways[0])!=str else "N/A"
 
     if "N/A" in headways:
-        headway_delta_mins = "N/A"
+        headway_delta_mins = "Delay likely"
     else:
         headway_delta_mins = f"{round(headways[0]/60 - (sum(headways[1:])/(240)), 1)} mins"
 
@@ -175,7 +188,7 @@ if is_weekday_morning:
         ewt = "N/A"
 
     if "N/A" in headways or "N/A" in waits:
-        ewt_delta = "N/A"
+        ewt_delta = "Delay likely"
     else:
         ewt_delta = f"{round(ewt - (sum(waits[1:]) - 0.5*sum(headways[1:]))/240, 1)} mins"
 
@@ -190,7 +203,6 @@ else:
     headway_delta_mins = None
 
 # build KPI containers
-
 col1, col2 = st.columns(2)
 
 with col1:
@@ -203,10 +215,11 @@ with col1:
 with col2:
     with st.container(border=True):
         st.metric(
-            "📍 Destination",
+            "📍 Shown Destination",
             destination,
-            delta="Direct" if direct else None,
+            delta="Likely direct" if direct else None,
             delta_color="normal",
+            delta_arrow="off",
         )
 
 if is_weekday_morning:
