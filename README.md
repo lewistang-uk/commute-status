@@ -10,6 +10,10 @@ KPIs (headways, wait times and excess wait times) can also be tracked over time 
 
 Powered by TfL Open Data.
 
+| Dashboard Screenshot |
+|------------------------|
+| ![app](images/app.png) |
+
 ---
 
 ## Instructions
