@@ -97,7 +97,7 @@ WITH fby AS (
 kpis AS (
     SELECT
         CASE 
-            WHEN COUNT(*) = 1 THEN NULL 
+            WHEN COUNT(*) = 1 THEN "N/A"
             ELSE ROUND(SUM(COALESCE(time_to_station-prev_tts, 0)) / (COUNT(*)-1), 1) 
         END AS avg_headway,
         CASE 
@@ -110,8 +110,8 @@ kpis AS (
     ORDER BY device_query_time
 )
 SELECT 
-    AVG(avg_headway),
-    AVG(avg_wait_time)
+    AVG(avg_headway) AS hwy,
+    AVG(avg_wait_time) AS awt
 FROM kpis
 GROUP BY DATE(device_query_time)
 ORDER BY DATE(device_query_time) DESC
@@ -141,7 +141,9 @@ if is_weekday_morning:
         return headways, waits
 
     headways, waits = find_kpis(query)
-
+    headways = [h if h is not None else "N/A" for h in headways]
+    waits = [w if w is not None else "N/A" for w in waits]
+    
     # find average wait time in minutes
     avg_wait = round(waits[0]/60, 1) if type(waits[0])!=str else "N/A"
 
